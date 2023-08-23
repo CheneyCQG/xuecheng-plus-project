@@ -1,0 +1,12 @@
+POST http://localhost:63040/content/course/list?pageNo=2&pageSize=1
+Content-Type: application/json
+
+{
+    "auditStatus": "202002",
+    "courseName": "",
+    "publishStatus":""
+}
+###
+
+GET http://localhost:63040/content/course-category/tree-nodes
+

@@ -1,0 +1,46 @@
+package com.xuecheng.controller;
+
+import com.xuecheng.content.model.dto.AddCourseParamsDto;
+import com.xuecheng.content.model.dto.CourseBaseInfoDto;
+import com.xuecheng.content.model.dto.QueryCourseParamsDto;
+import com.xuecheng.content.model.po.CourseBase;
+import com.xuecheng.content.service.CourseBaseService;
+import com.xuecheng.exception.InvalidationGroups;
+import com.xuecheng.model.dto.PageParams;
+import com.xuecheng.model.dto.PageResult;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * <p>
+ * 课程基本信息 前端控制器
+ * </p>
+ *
+ * @author Cheney
+ */
+@Slf4j
+@RestController
+public class CourseBaseController {
+    @Autowired
+    private CourseBaseService courseBaseService;
+    @RequestMapping("/course/list")
+    public PageResult<CourseBase> list(PageParams pageParams, @RequestBody(required = false) QueryCourseParamsDto queryCourseParamsDto){
+        return courseBaseService.listPage(pageParams,queryCourseParamsDto);
+    }
+    @RequestMapping("/course")
+    public CourseBaseInfoDto course(@RequestBody @Validated({InvalidationGroups.INSERT.class}) AddCourseParamsDto addCourseParamsDto){
+        return courseBaseService.course(addCourseParamsDto);
+    }
+
+    @RequestMapping("/course/{id}")
+    public CourseBaseInfoDto course(@PathVariable("id") String id){
+        return courseBaseService.course(id);
+    }
+
+
+}
