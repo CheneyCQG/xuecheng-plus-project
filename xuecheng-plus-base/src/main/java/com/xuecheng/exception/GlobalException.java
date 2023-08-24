@@ -19,4 +19,7 @@ public class GlobalException extends RuntimeException{
     public static void cast(CommonError error){
         throw new GlobalException(error);
     }
+    public static void cast(String error){
+        throw new GlobalException(error);
+    }
 }

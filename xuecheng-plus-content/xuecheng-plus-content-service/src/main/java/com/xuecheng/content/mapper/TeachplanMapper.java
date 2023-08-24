@@ -3,6 +3,7 @@ package com.xuecheng.content.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.xuecheng.content.model.dto.TeachplanDto;
 import com.xuecheng.content.model.po.Teachplan;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -16,4 +17,6 @@ import java.util.List;
 public interface TeachplanMapper extends BaseMapper<Teachplan> {
 
     List<TeachplanDto> teachplan(String courseId);
+
+    Integer selectMaxOrderby(@Param("courseid") Long courseId, @Param("grade") Integer grade, @Param("parentid") Long parentid);
 }
