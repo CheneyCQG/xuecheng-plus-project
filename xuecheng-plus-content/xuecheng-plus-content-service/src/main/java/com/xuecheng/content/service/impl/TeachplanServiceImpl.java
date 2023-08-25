@@ -1,17 +1,22 @@
 package com.xuecheng.content.service.impl;
 
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuecheng.content.mapper.TeachplanMapper;
+import com.xuecheng.content.mapper.TeachplanMediaMapper;
 import com.xuecheng.content.model.dto.SaveTeachplanDto;
 import com.xuecheng.content.model.dto.TeachplanDto;
 import com.xuecheng.content.model.po.Teachplan;
+import com.xuecheng.content.model.po.TeachplanMedia;
 import com.xuecheng.content.service.TeachplanService;
+import com.xuecheng.exception.CommonError;
 import com.xuecheng.exception.GlobalException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,6 +33,8 @@ import java.util.List;
 public class TeachplanServiceImpl extends ServiceImpl<TeachplanMapper, Teachplan> implements TeachplanService {
     @Autowired
     private TeachplanMapper teachplanMapper;
+    @Autowired
+    private TeachplanMediaMapper teachplanMediaMapper;
 
     @Override
     public List<TeachplanDto> teachplanTreeNodes(String courseId) {
@@ -82,5 +89,54 @@ public class TeachplanServiceImpl extends ServiceImpl<TeachplanMapper, Teachplan
 
             teachplanMapper.updateById(teachplan);
         }
+    }
+
+    @Override
+    @Transactional
+    public void teachplanDeleteById(String id) {
+        Teachplan teachplan = teachplanMapper.selectById(id);
+        if (teachplan.getGrade() == 1){
+            Integer count = teachplanMapper.selectCount(new QueryWrapper<Teachplan>().eq("parentid", teachplan.getId()));
+            if (count > 0){
+                GlobalException.cast(CommonError.HAVINGG_CHILD_NOT_DELETE);
+            }
+        }
+        int i = teachplanMapper.deleteById(id);
+        int teachplanId = teachplanMediaMapper.delete(new QueryWrapper<TeachplanMedia>().eq("teachplan_id", id));
+    }
+
+    @Override
+    @Transactional
+    public void move(String moveType, String id) {
+        Teachplan teachplan = teachplanMapper.selectById(id);
+        Teachplan teachplan1 = null;
+        if (teachplan.getGrade() == 2){
+            if (moveType.equals("movedown")){
+                teachplan1 = teachplanMapper.selectOne(new QueryWrapper<Teachplan>().ne("id",teachplan.getCourseId()).eq("parentid",teachplan.getParentid()).gt("orderby", teachplan.getOrderby()).orderByAsc("orderby").last("LIMIT 1"));
+                if (teachplan1 == null)
+                    GlobalException.cast(CommonError.NOT_MOVEDOWN);
+            }else{
+                teachplan1 = teachplanMapper.selectOne(new QueryWrapper<Teachplan>().ne("id",teachplan.getCourseId()).eq("parentid",teachplan.getParentid()).lt("orderby",teachplan.getOrderby()).orderByDesc("orderby").last("LIMIT 1"));
+                if (teachplan1 == null)
+                    GlobalException.cast(CommonError.NOT_MOVEUP);
+            }
+        }else {
+            if (moveType.equals("movedown")){
+                teachplan1 = teachplanMapper.selectOne(new QueryWrapper<Teachplan>().ne("id",teachplan.getCourseId()).eq("parentid",0).eq("course_id",teachplan.getCourseId()).gt("orderby", teachplan.getOrderby()).orderByAsc("orderby").last("LIMIT 1"));
+                if (teachplan1 == null)
+                    GlobalException.cast(CommonError.NOT_MOVEDOWN);
+            }else{
+                teachplan1 = teachplanMapper.selectOne(new QueryWrapper<Teachplan>().ne("id",teachplan.getCourseId()).eq("parentid",0).eq("course_id",teachplan.getCourseId()).lt("orderby",teachplan.getOrderby()).orderByDesc("orderby").last("LIMIT 1"));
+                if (teachplan1 == null)
+                    GlobalException.cast(CommonError.NOT_MOVEUP);
+            }
+        }
+
+
+        int temp = teachplan.getOrderby();
+        teachplan.setOrderby(teachplan1.getOrderby());
+        teachplan1.setOrderby(temp);
+        int update = teachplanMapper.updateById(teachplan);
+        int i = teachplanMapper.updateById(teachplan1);
     }
 }

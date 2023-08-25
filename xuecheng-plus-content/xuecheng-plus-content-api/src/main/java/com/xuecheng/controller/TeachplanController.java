@@ -48,6 +48,17 @@ public class TeachplanController {
      */
     @DeleteMapping("/teachplan/{id}")
     public void teachplanDeleteById(@PathVariable("id")String id){
+        teachplanService.teachplanDeleteById(id);
+    }
 
+    /**
+     * 课程计划的排序
+     * 上移或者下移
+     * @param moveType
+     * @param id
+     */
+    @PostMapping("/teachplan/{moveType}/{id}")
+    public void move(@PathVariable("moveType")String moveType,@PathVariable("id")String id){
+        teachplanService.move(moveType,id);
     }
 }

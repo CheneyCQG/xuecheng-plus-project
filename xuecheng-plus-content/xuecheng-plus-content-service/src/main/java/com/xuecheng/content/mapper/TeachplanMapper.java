@@ -19,4 +19,5 @@ public interface TeachplanMapper extends BaseMapper<Teachplan> {
     List<TeachplanDto> teachplan(String courseId);
 
     Integer selectMaxOrderby(@Param("courseid") Long courseId, @Param("grade") Integer grade, @Param("parentid") Long parentid);
+
 }

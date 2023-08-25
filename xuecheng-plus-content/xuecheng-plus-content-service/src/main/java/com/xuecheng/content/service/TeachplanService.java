@@ -29,4 +29,8 @@ public interface TeachplanService extends IService<Teachplan> {
      * @return
      */
     void teachplan(SaveTeachplanDto saveTeachplanDto);
+
+    void teachplanDeleteById(String id);
+
+    void move(String moveType, String id);
 }

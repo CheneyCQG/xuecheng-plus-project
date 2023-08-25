@@ -2,18 +2,15 @@ package com.xuecheng.content.service.impl;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.xuecheng.content.mapper.CourseBaseMapper;
-import com.xuecheng.content.mapper.CourseCategoryMapper;
-import com.xuecheng.content.mapper.CourseMarketMapper;
+import com.xuecheng.content.mapper.*;
 import com.xuecheng.content.model.dto.AddCourseParamsDto;
 import com.xuecheng.content.model.dto.CourseBaseInfoDto;
 import com.xuecheng.content.model.dto.QueryCourseParamsDto;
-import com.xuecheng.content.model.po.CourseBase;
-import com.xuecheng.content.model.po.CourseCategory;
-import com.xuecheng.content.model.po.CourseMarket;
+import com.xuecheng.content.model.po.*;
 import com.xuecheng.content.service.CourseBaseService;
 import com.xuecheng.exception.CommonError;
 import com.xuecheng.exception.GlobalException;
@@ -45,6 +42,12 @@ public class CourseBaseServiceImpl extends ServiceImpl<CourseBaseMapper, CourseB
     private CourseMarketMapper courseMarketMapper;
     @Autowired
     private CourseCategoryMapper courseCategoryMapper;
+    @Autowired
+    private TeachplanMapper teachplanMapper;
+    @Autowired
+    private TeachplanMediaMapper teachplanMediaMapper;
+    @Autowired
+    private CourseTeacherMapper courseTeacherMapper;
     @Override
     public PageResult<CourseBase> listPage(PageParams pageParams, QueryCourseParamsDto queryCourseParamsDto) {
         //分页查询
@@ -156,5 +159,15 @@ public class CourseBaseServiceImpl extends ServiceImpl<CourseBaseMapper, CourseB
         BeanUtils.copyProperties(courseBase,dto);
         BeanUtils.copyProperties(courseMarket,dto);
         return dto;
+    }
+
+    @Override
+    @Transactional
+    public void deleteCourseById(String id) {
+        courseBaseMapper.deleteById(id);
+        courseMarketMapper.deleteById(id);
+        teachplanMapper.delete(new QueryWrapper<Teachplan>().eq("course_id", id));
+        teachplanMediaMapper.delete(new QueryWrapper<TeachplanMedia>().eq("course_id", id));
+        courseTeacherMapper.delete(new QueryWrapper<CourseTeacher>().eq("course_id", id));
     }
 }

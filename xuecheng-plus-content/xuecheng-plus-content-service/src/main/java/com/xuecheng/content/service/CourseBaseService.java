@@ -38,4 +38,10 @@ public interface CourseBaseService extends IService<CourseBase> {
      * @return
      */
     CourseBaseInfoDto course(String id);
+
+    /**
+     * 删除课程
+     * @param id
+     */
+    void deleteCourseById(String id);
 }
