@@ -8,6 +8,9 @@ import com.xuecheng.content.service.CourseBaseService;
 import com.xuecheng.exception.InvalidationGroups;
 import com.xuecheng.model.dto.PageParams;
 import com.xuecheng.model.dto.PageResult;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -22,11 +25,13 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
+@Api
 public class CourseBaseController {
     @Autowired
     private CourseBaseService courseBaseService;
     @RequestMapping("/course/list")
-    public PageResult<CourseBase> list(PageParams pageParams, @RequestBody(required = false) QueryCourseParamsDto queryCourseParamsDto){
+    @ApiOperation(value = "分页查询")
+    public PageResult<CourseBase> list(@ApiParam(value = "分页参数") PageParams pageParams, @RequestBody(required = false) QueryCourseParamsDto queryCourseParamsDto){
         return courseBaseService.listPage(pageParams,queryCourseParamsDto);
     }
     @RequestMapping("/course")
