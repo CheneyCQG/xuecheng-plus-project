@@ -1,10 +1,13 @@
 package com.xuecheng;
 
 import io.minio.*;
+import io.minio.messages.DeleteError;
+import io.minio.messages.DeleteObject;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.FileInputStream;
+import java.util.ArrayList;
 
 public class MinIOTest {
     MinioClient minioClient =
@@ -46,12 +49,25 @@ public class MinIOTest {
 
     @Test
     public void testFileDelete() throws Exception {
-        minioClient.removeObject(
-                RemoveObjectArgs.builder()
+//        minioClient.removeObject(
+//                RemoveObjectArgs.builder()
+//                        .bucket("test")
+//                        .object("2022/06/19/1.jpg")
+//                        .build()
+//        );
+        ArrayList<DeleteObject> objects = new ArrayList<DeleteObject>();
+        objects.add(new DeleteObject("08/29/1.mp4"));
+        objects.add(new DeleteObject("08/28/1.jpg"));
+        Iterable<Result<DeleteError>> results = minioClient.removeObjects(
+                RemoveObjectsArgs
+                        .builder()
                         .bucket("test")
-                        .object("2022/06/19/1.jpg")
-                        .build()
-        );
+                        .objects(objects)
+                        .build());
+
+        for (Result<DeleteError> result : results) {
+            System.out.println(result.get().objectName());
+        }
     }
 
     @Test
