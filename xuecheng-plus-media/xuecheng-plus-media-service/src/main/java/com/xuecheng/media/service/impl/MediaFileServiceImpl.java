@@ -2,13 +2,16 @@ package com.xuecheng.media.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.j256.simplemagic.ContentInfoUtil;
 import com.xuecheng.media.mapper.MediaFilesMapper;
 import com.xuecheng.media.model.dto.QueryMediaParamsDto;
 import com.xuecheng.media.model.dto.UploadFileParamsDto;
 import com.xuecheng.media.model.dto.UploadFileResultDto;
 import com.xuecheng.media.model.po.MediaFiles;
+import com.xuecheng.media.model.po.MediaProcess;
 import com.xuecheng.media.service.MediaFileService;
+import com.xuecheng.media.service.MediaProcessService;
 import com.xuecheng.model.dto.PageParams;
 import com.xuecheng.model.dto.PageResult;
 import com.xuecheng.model.dto.RestResponse;
@@ -29,6 +32,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Mr.M
@@ -37,7 +41,7 @@ import java.util.List;
  * @date 2022/9/10 8:58
  */
 @Service
-public class MediaFileServiceImpl implements MediaFileService {
+public class MediaFileServiceImpl extends ServiceImpl<MediaFilesMapper, MediaFiles> implements MediaFileService {
 
     @Autowired
     MediaFilesMapper mediaFilesMapper;
@@ -46,6 +50,8 @@ public class MediaFileServiceImpl implements MediaFileService {
     private MinioClient minioClient;
     @Autowired
     private MediaFileService mediaFileService;
+    @Autowired
+    private MediaProcessService mediaProcessService;
 
     @Value("${minio.bucket.files}")
     private String fileBucket;
@@ -262,8 +268,8 @@ public class MediaFileServiceImpl implements MediaFileService {
         try {
             minioClient.composeObject(composeObjectArgs);
             //对比md5
-            File download = File.createTempFile("download", subfix);
-            File downloadFile = new File(download.getParent(),"download");
+            File download = File.createTempFile("download"+ UUID.randomUUID().toString(), subfix);
+            File downloadFile = new File(download.getParent(),"download"+System.currentTimeMillis());
             minioClient.downloadObject(
                     DownloadObjectArgs.builder()
                             .bucket(videoBucket)
@@ -283,15 +289,8 @@ public class MediaFileServiceImpl implements MediaFileService {
 //                            .objects(objects)
 //                            .build());
 
-            //插入mediafiles表
-            UploadFileParamsDto uploadFileParamsDto = new UploadFileParamsDto();
-            uploadFileParamsDto.setUsername("jack");
-            uploadFileParamsDto.setFileSize(downloadFile.length());
-            uploadFileParamsDto.setTags("标签");
-            uploadFileParamsDto.setRemark("备注");
-            uploadFileParamsDto.setFilename(fileName);
-            uploadFileParamsDto.setFileType("001002");
-            boolean b = mediaFileService.addFileToDB(new MediaFiles(), uploadFileParamsDto, fileMD5, objPath + fileMD5 + subfix, videoBucket);
+            //插入mediafiles表和待处理任务表
+            mediaFileService.addMediaFilesAndMediaProcess(downloadFile,fileName,fileMD5,objPath,subfix);
 
             return RestResponse.success(true);
         } catch (Exception e) {
@@ -301,5 +300,47 @@ public class MediaFileServiceImpl implements MediaFileService {
 
 
 
+    }
+
+    /**
+     * 插入mediafiles表和mediaprocess表
+     * @param downloadFile
+     * @param fileName
+     * @param fileMD5
+     * @param objPath
+     * @param subfix
+     */
+    @Transactional
+    public void addMediaFilesAndMediaProcess(File downloadFile, String fileName, String fileMD5, String objPath, String subfix) {
+        UploadFileParamsDto uploadFileParamsDto = new UploadFileParamsDto();
+        uploadFileParamsDto.setUsername("jack");
+        uploadFileParamsDto.setFileSize(downloadFile.length());
+        uploadFileParamsDto.setTags("标签");
+        uploadFileParamsDto.setRemark("备注");
+        uploadFileParamsDto.setFilename(fileName);
+        uploadFileParamsDto.setFileType("001002");
+        MediaFiles mediaFiles = new MediaFiles();
+        addFileToDB(mediaFiles, uploadFileParamsDto, fileMD5, objPath + fileMD5 + subfix, videoBucket);
+
+
+        //插入待处理任务表
+        String mimeType = ContentInfoUtil.findExtensionMatch(fileName).getMimeType();
+        if (mimeType.equals("video/x-msvideo")) {
+            //是avi文件
+            //插入表
+            addFileToMediaProcessDB(mediaFiles);
+        }
+    }
+
+    /**
+     * 插入待处理任务表
+     */
+    public void addFileToMediaProcessDB(MediaFiles mediaFiles) {
+        MediaProcess mediaProcess = new MediaProcess();
+        BeanUtils.copyProperties(mediaFiles,mediaProcess);
+        mediaProcess.setFailCount(0);//刚插入的处理任务，失败次数为0
+        mediaProcess.setStatus("1");//1未处理2处理成功3处理失败
+
+        mediaProcessService.save(mediaProcess);
     }
 }

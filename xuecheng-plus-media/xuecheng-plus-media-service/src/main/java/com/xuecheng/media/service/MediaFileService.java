@@ -1,6 +1,7 @@
 package com.xuecheng.media.service;
 
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.xuecheng.media.model.dto.QueryMediaParamsDto;
 import com.xuecheng.media.model.dto.UploadFileParamsDto;
 import com.xuecheng.media.model.dto.UploadFileResultDto;
@@ -17,7 +18,7 @@ import java.io.File;
  * @date 2022/9/10 8:55
  * @version 1.0
  */
-public interface MediaFileService {
+public interface MediaFileService extends IService<MediaFiles> {
 
  /**
   * @description 媒资文件查询方法
@@ -70,4 +71,6 @@ public interface MediaFileService {
     RestResponse uploadchunkFile(File chunkFile, int chunk, String fileMd5);
 
     RestResponse mergechinks(String fileMd5, String fileName1, int chunkTotal);
+
+    void addMediaFilesAndMediaProcess(File downloadFile, String fileName, String fileMD5, String objPath, String subfix);
 }
