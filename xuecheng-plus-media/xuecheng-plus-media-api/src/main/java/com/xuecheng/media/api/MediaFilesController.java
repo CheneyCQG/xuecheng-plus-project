@@ -11,6 +11,7 @@ import com.xuecheng.model.dto.PageParams;
 import com.xuecheng.model.dto.PageResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -44,28 +45,33 @@ public class MediaFilesController {
 
 @ApiOperation(value = "文件上传")
  @RequestMapping(value = "/upload/coursefile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
- public UploadFileResultDto coursefile(@RequestPart("filedata")MultipartFile multipartFile){
+ public UploadFileResultDto coursefile(@RequestPart("filedata")MultipartFile multipartFile,@RequestParam(value = "objectName",required = false) String objectName){
      //1保存上传的文件
 //    long size = multipartFile.getSize();
 //    String originalFilename = multipartFile.getOriginalFilename();//1.jpg
-    File tempFile = null;
+    //1.保存上传的文件
+    File tempFile = null;//minio.temp
     try {
-        tempFile = File.createTempFile("minio", "temp");//minio.temp
+        tempFile = File.createTempFile("minio", "temp");
         multipartFile.transferTo(tempFile);
     } catch (IOException e) {
         e.printStackTrace();
         GlobalException.cast(e.getMessage());
     }
-    //2封装service需要的信息
+    //2.封装Service需要信息
     UploadFileParamsDto uploadFileParamsDto = new UploadFileParamsDto();
     uploadFileParamsDto.setUsername("jack");
     uploadFileParamsDto.setFilename(multipartFile.getOriginalFilename());
     uploadFileParamsDto.setFileSize(multipartFile.getSize());
-    uploadFileParamsDto.setTags("图片");
+    uploadFileParamsDto.setTags("标签");
     uploadFileParamsDto.setRemark("备注");
-    uploadFileParamsDto.setFileType("001001");//代表类型为图片
-    //调用service层，正在上传文件到minio
-    return mediaFileService.uploadFile(uploadFileParamsDto,tempFile);
+    if (StringUtils.isEmpty(objectName)) {
+        uploadFileParamsDto.setFileType("001001"); //代表类型为图片
+    }else{
+        uploadFileParamsDto.setFileType("001003"); //代表类型为其他
+    }
+    //2.调用service层，真正上传文件到minio
+    return mediaFileService.uploadFile(uploadFileParamsDto,tempFile,objectName);
  }
 
 }

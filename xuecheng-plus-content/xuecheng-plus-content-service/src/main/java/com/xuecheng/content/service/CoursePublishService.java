@@ -19,4 +19,8 @@ public interface CoursePublishService extends IService<CoursePublish> {
      * @return
      */
     CoursePreviewDto findAllCourseInfoById(String courseId);
+
+    void commitAudit(Long id, Long courseId);
+
+    void coursepublish(Long id, Long courseId);
 }

@@ -3,6 +3,7 @@ package com.xuecheng.media.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.j256.simplemagic.ContentInfo;
 import com.j256.simplemagic.ContentInfoUtil;
 import com.xuecheng.media.mapper.MediaFilesMapper;
 import com.xuecheng.media.model.dto.QueryMediaParamsDto;
@@ -17,6 +18,7 @@ import com.xuecheng.model.dto.PageResult;
 import com.xuecheng.model.dto.RestResponse;
 import io.minio.*;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -80,31 +82,31 @@ public class MediaFileServiceImpl extends ServiceImpl<MediaFilesMapper, MediaFil
     }
 
     @Override
-    public UploadFileResultDto uploadFile(UploadFileParamsDto uploadFileParamsDto, File tempFile) {
+    public UploadFileResultDto uploadFile(UploadFileParamsDto uploadFileParamsDto, File tempFile,String objectName) {
 
-        //0查询数据库中有没有该文件
-        MediaFiles mediaFiles1 = mediaFilesMapper.selectById(getFileMD5(tempFile));
-        if (mediaFiles1 != null) {
-            return new UploadFileResultDto(mediaFiles1);
+        String fileMD5 = getFileMD5(tempFile); //7f8as79fds9f89dsg9d9f7g87fds
+        //0.查询数据库有没有该文件
+        MediaFiles existFile = mediaFilesMapper.selectById(fileMD5);
+        if (existFile != null) {
+            //接续优化，如果数据库有该文件，但是minio没有该文件，上传到minio
+            return new UploadFileResultDto(existFile);
         }
-        //1把文件上传到MINIO
 
-        addFileToMinIO(
-                fileBucket,
-                getFilePath() + getFileMD5(tempFile) + uploadFileParamsDto.getFilename().substring(uploadFileParamsDto.getFilename().lastIndexOf(".")),
-                tempFile.getAbsolutePath(),
-                ContentInfoUtil.findExtensionMatch(uploadFileParamsDto.getFilename().substring(uploadFileParamsDto.getFilename().lastIndexOf("."))).getMimeType()
-        );
+        String extendName = uploadFileParamsDto.getFilename().substring(uploadFileParamsDto.getFilename().lastIndexOf("."));//.png
+        ContentInfo contentInfo  = ContentInfoUtil.findExtensionMatch(extendName); //.png -> image/png
+        //1.把文件上传到MINIO
+        if (StringUtils.isEmpty(objectName)) {
+            String filePath = getFilePath(); //年/月/日/
+            objectName = filePath+fileMD5+extendName; //
+        }
 
-        //2把文件信息保持的到mediaFiles数据表中
+        addFileToMinIO(fileBucket,objectName,tempFile.getAbsolutePath(),contentInfo.getMimeType());
+        //2.把文件信息保持到mediaFiles数据表中
         MediaFiles mediaFiles = new MediaFiles();
-        mediaFileService.addFileToDB(mediaFiles,
-                uploadFileParamsDto,
-                getFileMD5(tempFile),
-                getFilePath() + getFileMD5(tempFile) + uploadFileParamsDto.getFilename().substring(uploadFileParamsDto.getFilename().lastIndexOf(".")),
-                fileBucket);
+        //this.addFileToDB(mediaFiles,uploadFileParamsDto,fileMD5,objectName);
+        mediaFileService.addFileToDB(mediaFiles,uploadFileParamsDto,fileMD5,objectName,fileBucket);
 
-        //3返回该文件的详细信息
+        //3.返回该文件的详细信息
         return new UploadFileResultDto(mediaFiles);
     }
 

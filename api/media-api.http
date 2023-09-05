@@ -1,10 +1,10 @@
 #测试文件上传
 
-POST http://localhost:63050/media/upload/coursefile
+POST http://localhost:63051/media/upload/coursefile?objectName=course/11.html
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary
-Content-Disposition: form-data; name="filedata"; filename="F12.jpg"
-Content-Type: image/jpg
+Content-Disposition: form-data; name="filedata"; filename="11.html"
+Content-Type: text/html
 
-< C:/Users/22091/Pictures/Saved Pictures/F12.jpg
+< C:/Users/22091/Pictures/Saved Pictures/11.html

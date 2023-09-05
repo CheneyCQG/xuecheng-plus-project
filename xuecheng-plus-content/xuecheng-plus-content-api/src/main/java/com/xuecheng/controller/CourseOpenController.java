@@ -16,11 +16,9 @@ public class CourseOpenController {
     @Autowired
     private CoursePublishService coursePublishService;
     @GetMapping("/course/whole/{courseId}")
-    public CoursePreviewDto getPreviewInfo(
-        @PathVariable("courseId")String courseId) {
+    public CoursePreviewDto getPreviewInfo(@PathVariable("courseId")String courseId) {
         //获取课程预览信息   
-        CoursePreviewDto coursePreviewInfo = 
-            coursePublishService.findAllCourseInfoById(courseId);
+        CoursePreviewDto coursePreviewInfo = coursePublishService.findAllCourseInfoById(courseId);
         return coursePreviewInfo; 
     }  
 }

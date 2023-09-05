@@ -1,15 +1,15 @@
-package com.xuecheng.content.service;
+package com.xuecheng.messagesdk.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.xuecheng.content.model.po.MqMessageHistory;
+import com.xuecheng.messagesdk.model.po.MqMessageHistory;
 
 /**
  * <p>
  *  服务类
  * </p>
  *
- * @author Cheney
- * @since 2023-08-21
+ * @author itcast
+ * @since 2022-09-21
  */
 public interface MqMessageHistoryService extends IService<MqMessageHistory> {
 

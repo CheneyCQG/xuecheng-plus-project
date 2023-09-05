@@ -36,7 +36,7 @@ public interface MediaFileService extends IService<MediaFiles> {
      * @param tempFile 图片文件
      * @return 插入到媒体库后的记录信息
      */
-    UploadFileResultDto uploadFile(UploadFileParamsDto uploadFileParamsDto, File tempFile);
+    UploadFileResultDto uploadFile(UploadFileParamsDto uploadFileParamsDto, File tempFile,String objectName);
 
     /**
      * 向数据库插入文件信息
