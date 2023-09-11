@@ -1,0 +1,12 @@
+#手机扫码
+http://localhost:63070/auth/oauth/authorize?client_id=XcWebApp&response_type=code&scope=all&redirect_uri=http://www.51xuecheng.cn
+
+
+### 拿到授权码后，获取token
+POST http://localhost:63070/auth/oauth/token?client_id=XcWebApp&client_secret=XcWebApp&grant_type=authorization_code&code=i3CNRt&redirect_uri=http://www.51xuecheng.cn
+
+### 密码模式
+POST http://localhost:63070/auth/oauth/token?client_id=XcWebApp&client_secret=XcWebApp&grant_type=password&username={"username":"admin","password":"111111","authType":"password","checkcode":"1234","checkcodekey":"key1234"}
+
+### 验证jwt是否有效
+POST http://localhost:63070/auth/oauth/check_token?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsieHVlY2hlbmctcGx1cyJdLCJ1c2VyX25hbWUiOiJhZG1pbiIsInNjb3BlIjpbImFsbCJdLCJleHAiOjE2OTQwNzcwNjIsImF1dGhvcml0aWVzIjpbInAxIl0sImp0aSI6IjU1ZTc3MGRkLTlhMzktNGZmMi1iNTYxLWVmYzdmOWVhNzZmYSIsImNsaWVudF9pZCI6IlhjV2ViQXBwIn0.WL8IskkIOqKmRvDaTz1SujV3Il2ByVBSb7fHZ1qMJS4

@@ -1,0 +1,4 @@
+### 获取验证码
+POST http://localhost:63075/checkcode/pic
+####
+POST http://localhost:63075/checkcode/verify?key=checkcode:a50374cda24047f081db0d541b25f856&code=x4pd

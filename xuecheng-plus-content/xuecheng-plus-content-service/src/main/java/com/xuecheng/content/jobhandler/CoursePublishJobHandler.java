@@ -1,8 +1,14 @@
 package com.xuecheng.content.jobhandler;
 
+import com.alibaba.fastjson.JSON;
 import com.xuecheng.content.config.MultipartSupportConfig;
 import com.xuecheng.content.feignclients.MediaClient;
+import com.xuecheng.content.feignclients.SearchClient;
+import com.xuecheng.content.model.dto.CourseIndex;
 import com.xuecheng.content.model.dto.CoursePreviewDto;
+import com.xuecheng.content.model.po.CourseMarket;
+import com.xuecheng.content.model.po.CoursePublish;
+import com.xuecheng.content.service.CourseBaseService;
 import com.xuecheng.content.service.CoursePublishService;
 import com.xuecheng.exception.GlobalException;
 import com.xuecheng.messagesdk.model.po.MqMessage;
@@ -12,6 +18,7 @@ import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,6 +38,10 @@ public class CoursePublishJobHandler extends MessageProcessAbstract {
 
     @Autowired
     private MediaClient mediaClient;
+    @Autowired
+    private SearchClient searchClient;
+    @Autowired
+    private CourseBaseService courseBaseService;
 
 
     @XxlJob("handlerCoursePublishJob")
@@ -49,7 +60,7 @@ public class CoursePublishJobHandler extends MessageProcessAbstract {
 //        saveToRedis(mqMessage);
 
         //2写es
-//        saveToEs(mqMessage);
+        saveToEs(mqMessage);
 
         //3写静态化页面到minio
         saveToMinio(mqMessage);
@@ -89,9 +100,22 @@ public class CoursePublishJobHandler extends MessageProcessAbstract {
             System.out.println("es不需要再写了");
         }
         //写es
-
+        CoursePublish coursePublish = coursePublishService.getById(mqMessage.getBusinessKey1());
+        if (coursePublish == null){
+            GlobalException.cast("该课程未发布");
+        }
+        //1复制基本信息
+        CourseIndex courseIndex = new CourseIndex();
+        BeanUtils.copyProperties(coursePublish,courseIndex);
+        //2解析market信息
+        CourseMarket courseMarket = JSON.parseObject(coursePublish.getMarket(), CourseMarket.class);
+        BeanUtils.copyProperties(courseMarket,courseIndex);
+        Boolean result = searchClient.add(courseIndex);
+        if (!result){
+            GlobalException.cast("添加索引库失败");
+        }
         //修改状态
-        mqMessageService.completedStageTwo(mqMessage.getId());
+//        mqMessageService.completedStageTwo(mqMessage.getId());
     }
 
     private void saveToRedis(MqMessage mqMessage) {
